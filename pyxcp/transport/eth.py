@@ -24,6 +24,7 @@ class Eth(BaseTransport):
         "PROTOCOL": (str, False, "TCP"),
         "IPV6": (bool, False, False),
         "TCP_NODELAY": (bool, False, False),
+        "BIND_ADDRESS": (str, False, ""),
     }
 
     MAX_DATAGRAM_SIZE = 512
@@ -38,6 +39,7 @@ class Eth(BaseTransport):
         self.protocol = self.config.get("PROTOCOL")
         self.ipv6 = self.config.get("IPV6")
         self.use_tcp_no_delay = self.config.get("TCP_NODELAY")
+        self.bind_to_address = self.config.get("BIND_ADDRESS")
 
         if self.ipv6 and not socket.has_ipv6:
             raise RuntimeError("IPv6 not supported by your platform.")
@@ -56,6 +58,8 @@ class Eth(BaseTransport):
         ) = addrinfo[0]
         self.status = 0
         self.sock = socket.socket(self.address_family, self.socktype, self.proto)
+        if self.bind_to_address:
+            self.sock.bind(self.bind_to_address)
         self.selector = selectors.DefaultSelector()
         self.selector.register(self.sock, selectors.EVENT_READ)
         self.use_tcp = self.protocol == "TCP"
